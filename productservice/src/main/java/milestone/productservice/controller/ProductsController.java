@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -30,6 +31,14 @@ public class ProductsController {
                 .map(p -> new ProductResponse(p.getProductId(), p.getName(), p.getDescription(), p.getBasePrice(), p.getCategoryId(), p.getCreatedAt(), p.getUpdatedAt()))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(resp);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ProductResponse> getById(@PathVariable("id") Integer id) {
+        return productRepository.findById(id)
+                .map(p -> new ProductResponse(p.getProductId(), p.getName(), p.getDescription(), p.getBasePrice(), p.getCategoryId(), p.getCreatedAt(), p.getUpdatedAt()))
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }
 
