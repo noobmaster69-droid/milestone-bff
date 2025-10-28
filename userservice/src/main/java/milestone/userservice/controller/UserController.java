@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import milestone.userservice.dto.LoginRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -36,9 +37,9 @@ public class UserController {
     }
 
     @PostMapping("/auth/login")
-    public ResponseEntity<Map<String, String>> login(@RequestBody Map<String, String> body) {
-        String username = body.getOrDefault("username", "");
-        String password = body.getOrDefault("password", "");
+    public ResponseEntity<Map<String, String>> login(@RequestBody LoginRequest body) {
+        String username = body.getUsername();
+        String password = body.getPassword();
 
         Optional<User> userOpt = userRepository.findByUsername(username);
         if (userOpt.isEmpty()) {
@@ -56,14 +57,18 @@ public class UserController {
         }
 
         Instant now = Instant.now();
+
+        var role = "ROLE_" + user.getUsertype().toUpperCase();
+
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer("userservice")
+                .subject(user.getUsername())
+                .claim("userId", user.getId())
+                .claim("authorities", List.of(role))  // <---
                 .issuedAt(now)
                 .expiresAt(now.plus(1, ChronoUnit.HOURS))
-                .subject(user.getUsername())
-                .claim("usertype", user.getUsertype())
-                .claim("userId", user.getId())
                 .build();
+
 
         // Explicit HS256 header to match the HMAC encoder configuration
         JwsHeader headers = JwsHeader.with(MacAlgorithm.HS256).build();
@@ -72,6 +77,7 @@ public class UserController {
         return ResponseEntity.ok(Map.of("token", token));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/auth/register")
     public ResponseEntity<?> register(@RequestBody User req) {
         if (req.getUsername() == null || req.getEmail() == null || req.getPassword() == null || req.getUsertype() == null) {

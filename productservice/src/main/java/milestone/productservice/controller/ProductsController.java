@@ -23,7 +23,6 @@ public class ProductsController {
         this.productRepository = productRepository;
     }
 
-    @PreAuthorize("hasRole('SELLER')")
     @GetMapping
     public ResponseEntity<List<ProductResponse>> getAll() {
         List<Product> products = productRepository.findAll();

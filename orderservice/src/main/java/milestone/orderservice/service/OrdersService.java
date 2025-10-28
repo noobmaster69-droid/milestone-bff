@@ -1,6 +1,7 @@
 package milestone.orderservice.service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -37,7 +38,7 @@ public class OrdersService {
     public OrderResponse createOrder(Integer userId, CreateOrderRequest req) {
         if (req == null || req.productId == null) throw new IllegalArgumentException("productId required");
         if (req.quantity == null || req.quantity <= 0) throw new IllegalArgumentException("invalid quantity");
-        ProductDto p = productClient.getProduct(req.productId.intValue());
+        ProductDto p = productClient.getById(req.productId.intValue());
         if (p == null) throw new IllegalArgumentException("product not found: " + req.productId);
 
         BigDecimal total = p.getBasePrice().multiply(BigDecimal.valueOf(req.quantity));
@@ -94,7 +95,16 @@ public class OrdersService {
 
     public List<OrderResponse> getAllOrders(Integer userId) {
         List<Order> orders = orderRepository.findByUserId(userId);
-        if(orders.isEmpty()){throw new IllegalArgumentException("order not found for the user: "+userId);}
+        if(orders.isEmpty()){OrderResponse resp = new OrderResponse();
+        resp.orderId = 0L;
+        resp.productId = 0L;
+        resp.quantity = 0;
+        resp.status = "NoOrderPlaced";
+        resp.totalPrice = BigDecimal.ZERO;
+        resp.createdAt = LocalDateTime.now();
+        List<OrderResponse> output = new ArrayList<>();
+        output.add(resp);
+        return output;}
         List<OrderResponse> output = new ArrayList<>();
         for(Order order: orders){
             OrderResponse resp = new OrderResponse();
