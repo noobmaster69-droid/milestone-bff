@@ -7,8 +7,10 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import feign.FeignException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import milestone.orderservice.client.ProductClient;
@@ -20,6 +22,7 @@ import milestone.orderservice.model.Order;
 import milestone.orderservice.model.Payment;
 import milestone.orderservice.repository.OrderRepository;
 import milestone.orderservice.repository.PaymentRepository;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class OrdersService {
@@ -31,16 +34,20 @@ public class OrdersService {
     public OrdersService(OrderRepository orderRepository, PaymentRepository paymentRepository, ProductClient productClient) {
         this.orderRepository = orderRepository;
         this.paymentRepository = paymentRepository;
-        this.productClient = productClient;
-    }
+            this.productClient = productClient;
+        }
 
-    @Transactional
-    public OrderResponse createOrder(Integer userId, CreateOrderRequest req) {
-        if (req == null || req.productId == null) throw new IllegalArgumentException("productId required");
-        if (req.quantity == null || req.quantity <= 0) throw new IllegalArgumentException("invalid quantity");
-        ProductDto p = productClient.getById(req.productId.intValue());
-        if (p == null) throw new IllegalArgumentException("product not found: " + req.productId);
-
+        @Transactional
+        public OrderResponse createOrder(Integer userId, CreateOrderRequest req) {
+            if (req == null || req.productId == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "invalid id ");
+            if (req.quantity == null || req.quantity <= 0) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Not available anymore ");
+            ProductDto p = null;
+            try{
+                p = productClient.getById(req.productId.intValue());
+            }catch (FeignException.NotFound e) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "product not found: " + req.productId);
+            }
         BigDecimal total = p.getBasePrice().multiply(BigDecimal.valueOf(req.quantity));
 
         Order order = new Order();

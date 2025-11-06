@@ -27,6 +27,7 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 
 @Configuration
 @EnableWebSecurity
@@ -56,13 +57,17 @@ public class SecurityConfiguration {
                 .build();
     }
 
-    private JwtAuthenticationConverter jwtAuthenticationConverter() {
+    @Bean
+    public JwtAuthenticationConverter jwtAuthenticationConverter() {
+        // Map the "authorities" claim directly into GrantedAuthority objects and
+        // keep the role names as-is (e.g. "ROLE_ADMIN"). This makes @PreAuthorize
+        // checks for ROLE_ADMIN work when JWT contains authorities: ["ROLE_ADMIN"]
+        JwtGrantedAuthoritiesConverter gac = new JwtGrantedAuthoritiesConverter();
+        gac.setAuthoritiesClaimName("authorities");
+        gac.setAuthorityPrefix("");
+
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-        converter.setJwtGrantedAuthoritiesConverter(jwt -> {
-            String ut = jwt.getClaimAsString("usertype");
-            if (ut == null) return List.of();
-            return List.of(new SimpleGrantedAuthority("ROLE_" + ut.toUpperCase()));
-        });
+        converter.setJwtGrantedAuthoritiesConverter(gac);
         return converter;
     }
 

@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import io.github.resilience4j.retry.annotation.Retry;
 import milestone.userservice.dto.LoginRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -18,6 +20,8 @@ import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.web.bind.annotation.*;
+
+
 
 import milestone.userservice.model.User;
 import milestone.userservice.repository.UserRepository;
@@ -77,7 +81,6 @@ public class UserController {
         return ResponseEntity.ok(Map.of("token", token));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/auth/register")
     public ResponseEntity<?> register(@RequestBody User req) {
         if (req.getUsername() == null || req.getEmail() == null || req.getPassword() == null || req.getUsertype() == null) {
@@ -112,6 +115,17 @@ public class UserController {
                 "username", saved.getUsername(),
                 "email", saved.getEmail()
         ));
+    }
+
+    @PostMapping("/auth/registering")
+    @Retry(name="registering", fallbackMethod = "registeringFallback")
+    @RateLimiter(name="registering")
+    public ResponseEntity<?> registering(@RequestBody User req){
+        throw new RuntimeException();
+    }
+
+    public ResponseEntity<?> registeringFallback(){
+        return ResponseEntity.ok("Okay, but the systems are down. Try again later");
     }
 
     @PreAuthorize("hasRole('ADMIN')")
