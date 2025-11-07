@@ -1,2 +1,2 @@
 rootProject.name = 'milestone'
-include 'userservice', 'productservice', 'orderservice', 'namingservice', 'cloudgateway'
+include 'userservice', 'productservice', 'orderservice', 'namingservice', 'cloudgateway', 'configserver'
