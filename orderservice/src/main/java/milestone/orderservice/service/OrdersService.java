@@ -48,6 +48,7 @@ public class OrdersService {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "product not found: " + req.productId);
             }
+//            if(req.quantity>p.get)
         BigDecimal total = p.getBasePrice().multiply(BigDecimal.valueOf(req.quantity));
 
         Order order = new Order();

@@ -3,6 +3,7 @@ package milestone.orderservice.client;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 
 @FeignClient(
         name = "productservice",
@@ -12,4 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 public interface ProductClient {
     @GetMapping("/{id}")
     ProductDto getById(@PathVariable("id") Integer id);
+
+    @PutMapping("/{id}/stock")
+
 }

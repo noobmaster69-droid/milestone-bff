@@ -37,6 +37,10 @@ public class Product {
     @Column(name = "base_price")
     private BigDecimal basePrice;
 
+
+    @Column(name = "stock")
+    private Integer stock;
+
     @Column(name = "category_id")
     private Integer categoryId;
 
